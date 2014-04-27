@@ -119,6 +119,9 @@ function formatter{T<:FloatingPoint}(xs::AbstractArray{T}; fmt=:auto)
     end
     x_min, x_max = concrete_minimum(xs), concrete_maximum(xs)
 
+    x_min, x_max, delta = (float64(float32(x_min)), float64(float32(x_max)), 
+        float64(float32(delta)))
+
     if !isfinite(x_min) || !isfinite(x_max) || !isfinite(delta)
         error("At least one finite value must be provided to formatter.")
     end
@@ -133,15 +136,15 @@ function formatter{T<:FloatingPoint}(xs::AbstractArray{T}; fmt=:auto)
 
     if fmt == :plain
         # SHORTEST_SINGLE rather than SHORTEST to crudely round away tiny innacuracies
-        Base.Grisu.@grisu_ccall delta Base.Grisu.SHORTEST_SINGLE 0
+        Base.Grisu.@grisu_ccall delta Base.Grisu.SHORTEST 0
         precision = max(0, Base.Grisu.LEN[1] - Base.Grisu.POINT[1])
 
         return x -> format_fixed(x, precision)
     elseif fmt == :scientific
-        Base.Grisu.@grisu_ccall delta Base.Grisu.SHORTEST_SINGLE 0
+        Base.Grisu.@grisu_ccall delta Base.Grisu.SHORTEST 0
         delta_magnitude = Base.Grisu.POINT[1]
 
-        Base.Grisu.@grisu_ccall x_max Base.Grisu.SHORTEST_SINGLE 0
+        Base.Grisu.@grisu_ccall x_max Base.Grisu.SHORTEST 0
         x_max_magnitude = Base.Grisu.POINT[1]
 
         precision = 1 + max(0, x_max_magnitude - delta_magnitude)
